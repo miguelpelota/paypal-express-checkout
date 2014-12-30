@@ -9,7 +9,7 @@ class Checkout
      * [$_config configuration settings for PayPal merchant]
      * @var array
      */
-    private $_config = array(
+    private static $_config = array(
         'USER'                              => 'miguelpelota1-facilitator_api1.yahoo.com',
         'PWD'                               => '1398470149',
         'SIGNATURE'                         => 'AFcWxV21C7fd0v3bYYYRCpSSRl31A2Cs0-R7sHqfJkaQPXEad2XvfW8a',
@@ -24,8 +24,10 @@ class Checkout
      * @param  string  paypal nvp's
      * @return array   paypal api response data
      */
-    private function _paypalCurl($post_vars)
+    private static function _paypalCurl($post_vars)
     {
+        $post_vars = array_merge($post_vars, self::$_config);
+
         $post_vars = http_build_query($post_vars);
 
         $ch = curl_init();
@@ -46,9 +48,9 @@ class Checkout
      *  @param  array   items, tax rate, shipping, return url, cancel url
      *  @return array   paypal token, ack, timestamp, etc.
      */
-    public function setExpressCheckout($data)
+    public static function setExpressCheckout($data)
     {
-        $this->_config['METHOD'] = 'SetExpressCheckout';
+        self::$_config['METHOD'] = 'SetExpressCheckout';
 
         $subtotal = 0;
 
@@ -68,27 +70,29 @@ class Checkout
 
         $post_vars['PAYMENTREQUEST_0_ITEMAMT']       = round($subtotal, 2);
         $post_vars['PAYMENTREQUEST_0_TAXAMT']        = round($data['tax_rate'] * $post_vars['PAYMENTREQUEST_0_ITEMAMT'], 2);
-        $post_vars['PAYMENTREQUEST_0_SHIPPINGAMT']   = $data['shipping'];
+        $post_vars['PAYMENTREQUEST_0_SHIPPINGAMT']   = $data['shipping_amount'];
         $post_vars['PAYMENTREQUEST_0_AMT']           = round($post_vars['PAYMENTREQUEST_0_ITEMAMT'] + $post_vars['PAYMENTREQUEST_0_TAXAMT'] + $post_vars['PAYMENTREQUEST_0_SHIPPINGAMT'], 2);
 
         $post_vars['RETURNURL'] = $data['return_url'];
         $post_vars['CANCELURL'] = $data['cancel_url'];
 
-        if ( $data['instant_update'] )
+        $post_vars['ALLOWNOTE'] = false;
+
+        if ( isset($data['instant_update']) )
         {
             $post_vars['CALLBACK'] = $data['callback_url'];
             $post_vars['CALLBACKTIMEOUT'] = 6;
 
             $post_vars['L_SHIPPINGOPTIONNAME0'] = 'Flat Rate Shipping';
-            $post_vars['L_SHIPPINGOPTIONAMOUNT0'] = $data['shipping'];
+            $post_vars['L_SHIPPINGOPTIONAMOUNT0'] = $data['shipping_amount'];
             $post_vars['L_SHIPPINGOPTIONISDEFAULT0'] = true;
 
             $post_vars['MAXAMT'] = $post_vars['PAYMENTREQUEST_0_AMT'] + 100;
+
+            $post_vars['PAYMENTREQUEST_0_INSURANCEOPTIONOFFERED'] = false;
         }
 
-        $post_vars = array_merge($post_vars, $this->_config);
-
-        return $this->_paypalCurl($post_vars);
+        return self::_paypalCurl($post_vars);
     }
 
 
@@ -96,15 +100,13 @@ class Checkout
      *  @param  string  token
      *  @return array   collection of items, shipping info, customer info, etc.
      */
-    public function getExpressCheckoutDetails($token)
+    public static function getExpressCheckoutDetails($token)
     {
-        $this->_config['METHOD'] = 'GetExpressCheckoutDetails';
+        self::$_config['METHOD'] = 'GetExpressCheckoutDetails';
 
         $post_vars["TOKEN"] = $token;
 
-        $post_vars = array_merge($post_vars, $this->_config);
-
-        return $this->_paypalCurl($post_vars);
+        return self::_paypalCurl($post_vars);
     }
 
 
@@ -112,13 +114,11 @@ class Checkout
      *  @param  array   payerid, token, amt
      *  @return array   ack, timestamp, fee, etc.
      */
-    public function doExpressCheckoutPayment( $data )
+    public static function doExpressCheckoutPayment( $post_vars )
     {
-        $this->_config['METHOD'] = 'DoExpressCheckoutPayment';
+        self::$_config['METHOD'] = 'DoExpressCheckoutPayment';
 
-        $post_vars = array_merge($data, $this->_config);
-
-        return $this->_paypalCurl($post_vars);
+        return self::_paypalCurl($post_vars);
     }
 
 }

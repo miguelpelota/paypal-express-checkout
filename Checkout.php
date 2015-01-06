@@ -10,9 +10,9 @@ class Checkout
      * @var array
      */
     private static $_config = array(
-        'USER'                              => 'miguelpelota1-facilitator_api1.yahoo.com',
-        'PWD'                               => '1398470149',
-        'SIGNATURE'                         => 'AFcWxV21C7fd0v3bYYYRCpSSRl31A2Cs0-R7sHqfJkaQPXEad2XvfW8a',
+        'USER'                              => '',
+        'PWD'                               => '',
+        'SIGNATURE'                         => '',
         'HDRIMG'                            => 'http://placekitten.com/g/150/150',
         'VERSION'                           => '119',
         'PAYMENTREQUEST_0_PAYMENTACTION'    => 'SALE',

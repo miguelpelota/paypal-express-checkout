@@ -11,6 +11,8 @@ class CheckoutSet extends CheckoutCore
     private $tax_rate        = 0;
     private $return_url      = '';
     private $cancel_url      = '';
+    private $instant_update  = false;
+    private $callback_url    = '';
 
 
     public function setExpressCheckout()
@@ -40,6 +42,22 @@ class CheckoutSet extends CheckoutCore
 
         $post_vars['RETURNURL'] = $this->return_url;
         $post_vars['CANCELURL'] = $this->cancel_url;
+
+        $post_vars['ALLOWNOTE'] = false;
+
+        if ( $this->instant_update )
+        {
+            $post_vars['CALLBACK']        = $this->callback_url;
+            $post_vars['CALLBACKTIMEOUT'] = 6;
+
+            $post_vars['L_SHIPPINGOPTIONNAME0']      = 'Flat Rate Shipping';
+            $post_vars['L_SHIPPINGOPTIONAMOUNT0']    = $post_vars['PAYMENTREQUEST_0_SHIPPINGAMT'];
+            $post_vars['L_SHIPPINGOPTIONISDEFAULT0'] = true;
+
+            $post_vars['MAXAMT'] = $post_vars['PAYMENTREQUEST_0_AMT'] + 100;
+
+            $post_vars['PAYMENTREQUEST_0_INSURANCEOPTIONOFFERED'] = false;
+        }
 
         $response = $this->paypalCurl($post_vars);
 
@@ -76,6 +94,18 @@ class CheckoutSet extends CheckoutCore
     public function setCancelUrl($cancel_url)
     {
         $this->cancel_url = $cancel_url;
+    }
+
+
+    public function setInstantUpdate($instant_update)
+    {
+        $this->instant_update = $instant_update;
+    }
+
+
+    public function setCallbackUrl($callback_url)
+    {
+        $this->callback_url = $callback_url;
     }
 
 }
